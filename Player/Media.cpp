@@ -1,5 +1,5 @@
 ﻿#include "Media.h"
-static const double NOSYNC_THRESHOLD = 0.003;
+static const double NOSYNC_THRESHOLD = 0.03;
 #define error_null(p,info)\
 do{\
 	if (!p){\
