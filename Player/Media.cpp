@@ -1,5 +1,5 @@
 ﻿#include "Media.h"
-static const double NOSYNC_THRESHOLD = 0.03;
+static const double NOSYNC_THRESHOLD = 0.003;
 #define error_null(p,info)\
 do{\
 	if (!p){\
@@ -186,18 +186,19 @@ void video_refresh_timer(void* userdata)
 				}
 				else//视频快，延长展示时间
 				{
-					actual_delay = video_show_time *1.5;
+					actual_delay = video_show_time+ video_show_time * 0.5;
 				}
 			}
 			
 			AVFrame* resFrame = video->convert(frame);
 			
-			SDL_RenderClear(media->videoDisplay.render);
+			
 
 			SDL_UpdateYUVTexture(media->videoDisplay.texture, nullptr,
 				resFrame->data[0], resFrame->linesize[0],
 				resFrame->data[1], resFrame->linesize[1],
 				resFrame->data[2], resFrame->linesize[2]);
+			SDL_RenderClear(media->videoDisplay.render);
 			SDL_RenderCopy(media->videoDisplay.render, media->videoDisplay.texture, nullptr, nullptr);
 			SDL_RenderPresent(media->videoDisplay.render);
 			
