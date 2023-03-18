@@ -21,7 +21,7 @@ private:
 public:
 	void insert(T item);
 	void pop_begin(T& data);
-
+	int64_t size();
 };
 
 template<class T>
@@ -44,4 +44,11 @@ inline void SharedSet<T>::pop_begin(T& data)
 		});
 	data = *(h.begin());
 	h.erase(h.begin());
+}
+
+template<class T>
+inline int64_t SharedSet<T>::size()
+{
+	lock_guard<mutex>lck(mutex);
+	return h.size();
 }

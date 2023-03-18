@@ -164,15 +164,17 @@ void video_refresh_timer(void* userdata)
 	Video* video = &media->video;
 	if(video->getVideoindex() >= 0)
 	{
-			/*FrameInfo frameInfo;
+			FrameInfo frameInfo;
 			video->frame_set.pop_begin(frameInfo);
-			AVFrame* frame = frameInfo.frame;*/
+			AVFrame* frame = frameInfo.frame;
+			double video_time = frameInfo.pts;
 
-			FrameInfo *frameInfo;
+			/*FrameInfo *frameInfo;
 			video->frame_que.pop(frameInfo);
 			AVFrame* frame = frameInfo->frame;
+			double video_time = frameInfo->pts;*/
+
 			double audio_time = media->audio.get_play_clock();//当前音频播放到的时刻
-			double video_time = frameInfo->pts;
 			cout <<"video_time=" << video_time << "\n";
 			cout <<"audio_time=" << audio_time << "\n";
 			double video_show_time = frame->pkt_duration* av_q2d(video->getVideostream()->time_base);
@@ -197,17 +199,10 @@ void video_refresh_timer(void* userdata)
 			AVFrame* resFrame = video->convert(frame);
 			
 			
-
-			SDL_UpdateYUVTexture(media->videoDisplay.texture, nullptr,
-				resFrame->data[0], resFrame->linesize[0],
-				resFrame->data[1], resFrame->linesize[1],
-				resFrame->data[2], resFrame->linesize[2]);
-			SDL_RenderClear(media->videoDisplay.render);
-			SDL_RenderCopy(media->videoDisplay.render, media->videoDisplay.texture, nullptr, nullptr);
-			SDL_RenderPresent(media->videoDisplay.render);
+			media->videoDisplay.renderer(resFrame);
+			
 			
 			schedule_refresh(media, static_cast<int>(actual_delay * 1000 + 0.5));
-			//av_usleep();
 			av_frame_free(&frame);
 	}
 	

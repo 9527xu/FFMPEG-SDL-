@@ -5,6 +5,17 @@ extern "C"
 }
 
 
+void VideoDisplay::renderer(AVFrame* resFrame)
+{
+  SDL_UpdateYUVTexture(texture, nullptr,
+    resFrame->data[0], resFrame->linesize[0],
+    resFrame->data[1], resFrame->linesize[1],
+    resFrame->data[2], resFrame->linesize[2]);
+  SDL_RenderClear(render);
+  SDL_RenderCopy(render, texture, nullptr, nullptr);
+  SDL_RenderPresent(render);
+}
+
 void VideoDisplay::display()
 {
   window = SDL_CreateWindow("Player", 100, 100, WIDTH, HEIGHT,

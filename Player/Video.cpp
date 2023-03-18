@@ -1,5 +1,6 @@
 ﻿#include "Video.h"
-#define CAPACITY 30
+#define CAPACITY 200
+#define SLEEP_TIME 500
 
 AVCodecContext* Video::getVideoCodecctx() const
 {
@@ -48,50 +49,45 @@ void Video::video_decode_packet()
     
    
     
-    ////避免解码过快
-    //if (frame_que.size() >= CAPACITY)
-    //  this_thread::sleep_for(std::chrono::milliseconds(50));
-    
-    double pts = packet->pts;
-    if (pts == AV_NOPTS_VALUE)
-    {
-      pts = 0;
-    }
+    ////避免内容读取过快
+    if (frame_que.size() >= CAPACITY)
+      this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
+    if (frame_set.size() >= CAPACITY)//读取的内容超过5分钟就休眠，直到
+      this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
+    //this_thread::sleep_until()
 
-    pts *= av_q2d(video_stream->time_base);//当前帧的时长
-   // pts = synchronize(frame, pts);
     
-    /*FrameInfo frameInfo;
+    
+    double pts = get_pts_time(frame->pts);
+   // double pts = get_pts_time(packet->pts);
+    FrameInfo frameInfo;
     frameInfo.frame = frame;
     frameInfo.pts = pts;
-    frame_set.insert(frameInfo);*/
+    frame_set.insert(frameInfo);
+
+
+   /* double pts = get_pts_time(frame->pts);
     FrameInfo *frameInfo=new FrameInfo;
    frameInfo->frame = frame;
    frameInfo->pts = pts;
-    frame_que.push(frameInfo);
+    frame_que.push(frameInfo);*/
     av_packet_free(&packet);
 
   }
 }
 
-double Video::synchronize(AVFrame* srcFrame, double pts)
+
+double Video::get_pts_time(double pts)
 {
-  //pts = av_frame_get_best_effort_timestamp(frame)) == AV_NOPTS_VALUE，
-  //获取pts无效，采取之前的播放长度
-  if (pts != 0)
-  {
-    video_clock = pts;
-  }
-  else
+  if (pts == AV_NOPTS_VALUE)
   {
     pts = video_clock;
   }
-  //解码时，这表示图片必须延迟多少时间。extra_delay = repeat_pict / (2*fps)
-  //fps：每秒的帧数=刻度=av_q2d(stream->codecpar->time_base)
-  //解码所需时间
-  double frame_delay = srcFrame->repeat_pict * (av_q2d(video_stream->time_base) * 0.5);
-
-  video_clock += frame_delay;
+  else
+  {
+    video_clock = pts;
+  }
+  pts *= av_q2d(video_stream->time_base);//当前帧的时长
   return pts;
 }
 

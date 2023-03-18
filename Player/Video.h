@@ -56,8 +56,9 @@ private:
   thread decode_thr;
   void video_decode_packet();
 
-  //pts+解码所花费的时间
-  double synchronize(AVFrame*srcFrame,double pts);
+  
+  //返回pts对应的时间
+  double get_pts_time(double pts);
 
   //配置转换参数
   void config_convert_par();
@@ -66,10 +67,19 @@ private:
   int height;
 
 public:
+  //在
+  //packet->pts不是，所以存packet->pts要用set，frame->pts随意
+ // 读取内容的packetframe->pts是递增的
+  
+  //队列可存packet->pts、frame->pts
+  //set只可存frame->pts
+
     SharedQueue<AVPacket*>packet_que;
     //因为视频的pts与dts不同，而队列是以dts为顺序的不妥，frame用哈希表存,实现以pts为顺序从小到大排序
     SharedQueue<FrameInfo*>frame_que;
     //注：哈希表不能用指针，否则是根据指针的地址排序的
+    //改为set会出现抖动，不知道原因是啥
+    //解决：使用set存的是而不是packet->pts不然会抖。队列存的是packet->pts
     SharedSet<FrameInfo> frame_set;
 
     Video();

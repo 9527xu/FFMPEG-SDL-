@@ -30,11 +30,12 @@ extern "C" {
 
 class VideoDisplay
 {
-public:
   SDL_Window* window = nullptr;
   SDL_Renderer* render = nullptr;
   SDL_Texture* texture = nullptr;
-
+public:
+  //传入yuv420的帧即可渲染
+  void renderer(AVFrame* resFrame);
   void display();
   int getWidth()const;
   int getHeight()const;
