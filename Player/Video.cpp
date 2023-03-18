@@ -59,12 +59,16 @@ void Video::video_decode_packet()
     }
 
     pts *= av_q2d(video_stream->time_base);//当前帧的时长
-    pts = synchronize(frame, pts);
+   // pts = synchronize(frame, pts);
     
-    FrameInfo frameInfo;
+    /*FrameInfo frameInfo;
     frameInfo.frame = frame;
     frameInfo.pts = pts;
-    frame_set.insert(frameInfo);
+    frame_set.insert(frameInfo);*/
+    FrameInfo *frameInfo=new FrameInfo;
+   frameInfo->frame = frame;
+   frameInfo->pts = pts;
+    frame_que.push(frameInfo);
     av_packet_free(&packet);
 
   }

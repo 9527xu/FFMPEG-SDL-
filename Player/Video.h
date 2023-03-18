@@ -68,7 +68,7 @@ private:
 public:
     SharedQueue<AVPacket*>packet_que;
     //因为视频的pts与dts不同，而队列是以dts为顺序的不妥，frame用哈希表存,实现以pts为顺序从小到大排序
-    ///SharedQueue<AVFrame*>frame_que;
+    SharedQueue<FrameInfo*>frame_que;
     //注：哈希表不能用指针，否则是根据指针的地址排序的
     SharedSet<FrameInfo> frame_set;
 

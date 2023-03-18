@@ -140,12 +140,13 @@ int Audio::audio_decode_packet(uint8_t* audio_buf, int buf_size)
 				swr_free(&swr_ctx);
 				swr_ctx = NULL;
 			}
-			av_frame_free(&frame);
 			AVSampleFormat dst_format= av_get_packed_sample_fmt((AVSampleFormat)wanted_frame.format);
 			int data_size= wanted_frame.channels * len2 * av_get_bytes_per_sample(dst_format);
 
 			// 每秒钟音频播放的字节数 sample_rate * channels * sample_format(一个sample占用的字节数)
-			audio_clock += static_cast<double>(data_size) / (2 * audio_stream->codecpar->channels * audio_stream->codecpar->sample_rate);
+			//audio_clock += static_cast<double>(data_size) / (2 * audio_stream->codecpar->channels * audio_stream->codecpar->sample_rate);
+			audio_clock = av_q2d(audio_stream->time_base) * frame->pts;
+			av_frame_free(&frame);
 			return data_size;//返回数据长度
 		}
 	}
