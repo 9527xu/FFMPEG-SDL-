@@ -162,7 +162,7 @@ void video_refresh_timer(void* userdata)
 {
 	Media* media = (Media*)userdata;
 	Video* video = &media->video;
-	if(video->getVideoindex() >= 0)
+	while(video->getVideoindex() >= 0)
 	{
 			FrameInfo frameInfo;
 			video->frame_set.pop_begin(frameInfo);
@@ -202,8 +202,8 @@ void video_refresh_timer(void* userdata)
 			SDL_RenderCopy(media->videoDisplay.render, media->videoDisplay.texture, nullptr, nullptr);
 			SDL_RenderPresent(media->videoDisplay.render);
 			
-			schedule_refresh(media, static_cast<int>(actual_delay * 1000 + 0.5));
-
+			//schedule_refresh(media, static_cast<int>(actual_delay * 1000 + 0.5));
+			av_usleep();
 			av_frame_free(&frame);
 	}
 	
