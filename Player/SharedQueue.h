@@ -26,7 +26,7 @@ private:
 	queue<T>que;
 	mutex mtx;
 	std::condition_variable m_cond;
-
+	int maxSize = 1024;
 };
 
 template<class T>
@@ -42,11 +42,14 @@ inline SharedQueue<T>::~SharedQueue()
 template<class T>
 inline void SharedQueue<T>::push(T item)
 {
+	lock_guard<mutex>lock(mtx);
+	que.push(item);
+	if (que.size() < maxSize)
 	{
-		lock_guard<mutex>lock(mtx);
-		que.push(item);
+		m_cond.notify_all();
 	}
-	m_cond.notify_all();
+	
+	
 }
 
 template<class T>
@@ -57,8 +60,6 @@ inline void SharedQueue<T>::pop(T& data)
 		{
 			return que.size();
 		});
-	
-
 	data = move(que.front());
 	que.pop();
 }

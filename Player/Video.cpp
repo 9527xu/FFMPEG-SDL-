@@ -46,18 +46,6 @@ void Video::video_decode_packet()
 
       continue;
     }
-    
-   
-    
-    ////避免内容读取过快
-    if (frame_que.size() >= CAPACITY)
-      this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
-    if (frame_set.size() >= CAPACITY)//读取的内容超过5分钟就休眠，直到
-      this_thread::sleep_for(std::chrono::milliseconds(SLEEP_TIME));
-    //this_thread::sleep_until()
-
-    
-    
     double pts = get_pts_time(frame->pts);
    // double pts = get_pts_time(packet->pts);
     FrameInfo frameInfo;
@@ -104,9 +92,9 @@ void Video::config_convert_par()
 
   outBuffer = (uint8_t*)av_malloc(numBytes * sizeof(uint8_t));//实例化缓冲区
 
-  //把缓冲区设置给yuv420Frame
+  //把缓冲区outBuffer设置给yuv420Frame的data
   av_image_fill_arrays(yuv420Frame->data, yuv420Frame->linesize, outBuffer, AV_PIX_FMT_YUV420P, video_codec_ctx->width, video_codec_ctx->height, 1);
-
+  
   sws_ctx = sws_getContext(
     //输入
     video_codec_ctx->width,
@@ -185,6 +173,7 @@ void Video::setHeight(int height)
 
 AVFrame* Video::convert(AVFrame*& frame)
 {
+  //srcSliceY：像素内存的偏移位，偏移多少才是真正的像素数据，本文没有偏移，所以填 0 即可。
   sws_scale(sws_ctx, frame->data, frame->linesize, 0, frame->height, yuv420Frame->data, yuv420Frame->linesize);
   return yuv420Frame;
 }

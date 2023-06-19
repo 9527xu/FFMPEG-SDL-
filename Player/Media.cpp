@@ -41,14 +41,11 @@ void Media::play()
 	{
 		read_packet_thr = thread(&Media::read_packet, this);
 	}
-	//初始化SDL
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER))
-		printf("There is something wrong with your SDL Libs. Couldn't run");
-	//打开音频驱动
-#ifdef _WIN32
-	SDL_AudioInit("directsound");
-#endif
-	audio.play();
+
+	if(audio.getAudioindex()>0)
+		audio.play();
+	//if (video.getVideoindex() < 0)
+		//return;
 	video.setWidth(videoDisplay.getWidth());
 	video.setHeight(videoDisplay.getHeight());
 	video.play();
@@ -130,6 +127,7 @@ void Media::read_packet()
 			if (format_ctx->pb->error == 0)
 				continue;
 		}
+		
 		if (packet->stream_index == audio.getAudioindex())
 		{
 			AVRational time=format_ctx->streams[packet->stream_index]->time_base;
@@ -138,6 +136,7 @@ void Media::read_packet()
 		}
 		else if(packet->stream_index == video.getVideoindex())
 		{
+			//cout<<"packet->pts=" << packet->pts << "\n";
 			AVRational time = format_ctx->streams[packet->stream_index]->time_base;
 			//cout << "video time=" << packet->pts * av_q2d(time) << "\n";
 			video.packet_que.push(packet);
@@ -168,31 +167,50 @@ void video_refresh_timer(void* userdata)
 			video->frame_set.pop_begin(frameInfo);
 			AVFrame* frame = frameInfo.frame;
 			double video_time = frameInfo.pts;
+			printf_s("%d\n", frame->pts);
 
-			/*FrameInfo *frameInfo;
-			video->frame_que.pop(frameInfo);
-			AVFrame* frame = frameInfo->frame;
-			double video_time = frameInfo->pts;*/
 
 			double audio_time = media->audio.get_play_clock();//当前音频播放到的时刻
-			cout <<"video_time=" << video_time << "\n";
-			cout <<"audio_time=" << audio_time << "\n";
+		/*	cout <<"video_time=" << video_time << "\n";
+			cout <<"audio_time=" << audio_time << "\n";*/
 			double video_show_time = frame->pkt_duration* av_q2d(video->getVideostream()->time_base);
 			
 			double diff = audio_time - video_time;
-			double actual_delay = 0;
+			double actual_delay = video_show_time;
 			
 			if (abs(diff) > NOSYNC_THRESHOLD)
 			{
 				
 				if (diff > 0)//音频快，缩短展示时间
 				{
-					
-					actual_delay = video_show_time *0.5;
+					if (video_show_time * 2 <= diff)
+					{
+						actual_delay = video_show_time / 2;
+					}
+					else if (video_show_time * 1.5 <= diff)
+					{
+						actual_delay = video_show_time / 1.5;
+					}
+					else if (video_show_time * 1.25 <= diff)
+						actual_delay = video_show_time / 1.25;
+					printf_s("音频快，diff=%llf actual_delay=%llf", diff, actual_delay);
+
 				}
 				else//视频快，延长展示时间
 				{
-					actual_delay = video_show_time+ video_show_time * 0.5;
+					diff = -diff;
+					if (video_show_time * 2 <= diff)
+					{
+						actual_delay = video_show_time * 2;
+					}
+					else if (video_show_time * 1.5 <= diff)
+					{
+						actual_delay = video_show_time * 1.5;
+					}
+					else if (video_show_time * 1.25 <= diff)
+						actual_delay = video_show_time * 1.25;
+					printf_s("视频快，diff=%llf actual_delay=%llf", diff, actual_delay);
+
 				}
 			}
 			
@@ -205,7 +223,6 @@ void video_refresh_timer(void* userdata)
 			schedule_refresh(media, static_cast<int>(actual_delay * 1000 + 0.5));
 			av_frame_free(&frame);
 	}
-	
 	
 }
 // 延迟delay ms后刷新video帧

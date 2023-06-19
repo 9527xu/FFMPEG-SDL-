@@ -60,7 +60,7 @@ private:
   //返回pts对应的时间
   double get_pts_time(double pts);
 
-  //配置转换参数
+  //配置转换器参数
   void config_convert_par();
 
   int width;
@@ -103,5 +103,6 @@ public:
     void setHeight(int height);
     //转换成对应帧输出
     AVFrame* convert(AVFrame*& frame);
+    
 };
 

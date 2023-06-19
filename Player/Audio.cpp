@@ -38,6 +38,13 @@ Audio::~Audio()
 }
 void Audio::play()
 {
+	//初始化SDL
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER))
+		printf("There is something wrong with your SDL Libs. Couldn't run");
+	//打开音频驱动
+#ifdef _WIN32
+	SDL_AudioInit("directsound");
+#endif
 
 	static SDL_AudioSpec wantedSpec = { 0 }, audioSpec = { 0 };
 	memset(&wantedSpec, 0, sizeof wantedSpec);
@@ -145,7 +152,6 @@ int Audio::audio_decode_packet(uint8_t* audio_buf, int buf_size)
 
 			// 每秒钟音频播放的字节数 sample_rate * channels * sample_format(一个sample占用的字节数)
 			//audio_clock += static_cast<double>(data_size) / (2 * audio_stream->codecpar->channels * audio_stream->codecpar->sample_rate);
-			audio_clock = av_q2d(audio_stream->time_base) * frame->pts;
 			av_frame_free(&frame);
 			return data_size;//返回数据长度
 		}
@@ -184,7 +190,7 @@ void audio_callback(void* userdata, Uint8* stream, int len)
 		SDL_MixAudio(stream, audio->audio_buff + audio->audio_buf_index, len, SDL_MIX_MAXVOLUME);
 		len -= len1;
 		stream += len1;
-		audio->audio_buf_index += len1;
+		audio->audio_buf_index +=len1;
 	}
 }
 
